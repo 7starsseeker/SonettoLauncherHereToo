@@ -210,7 +210,9 @@ launcher/
 ├── ConfigBackup.cs                 # 执行前的配置备份
 ├── Native/                         # Job Object / 控制台信号 / HTTP 探活等 Win32 封装
 ├── assets/loading.html             # 状态页与任务控制台（内嵌资源）
+├── assets/app.ico                  # exe 图标（由上游 logo 渲染，见 tools/make_icon.py）
 ├── wrappers/                       # 两个 wrapper 脚本（内嵌资源，运行时释放）
+├── tools/make_icon.py              # 从上游 logo.svg 生成多尺寸 ico
 ├── build.ps1                       # 打包（自包含 / 框架依赖）
 ├── publish-repo.ps1                # 把源码发布到本仓库
 └── publish-release.ps1             # 把 exe 作为 Release 附件发布
@@ -231,6 +233,8 @@ Release 已存在时会补传/覆盖附件，方便重打包后刷新。
 
 ## 更新日志
 
+- **v1.0.2** — 加上 exe 图标（取自上游项目 `web/src/assets/icons/logo.svg` 的油灯标志，由 `tools/make_icon.py`
+  渲染成 16–256px 多尺寸 ico）；启动页标题旁也显示同一标志。
 - **v1.0.1** — 「检查更新」按实际结局区分提示：更新完成 / 已是最新（无需更新）/ 未发现上游更新 / 已终止 / 更新失败；
   后四种保留任务控制台输出便于排查；「初始化环境」同步区分完成 / 仍不完整 / 已终止 / 失败。
 - **v1.0.0** — 首个版本：一键启动、WebView2 内嵌界面、三级优雅退出与 Job Object 防孤儿、
@@ -248,3 +252,7 @@ Release 已存在时会补传/覆盖附件，方便重打包后刷新。
 
 上游 SonettoHere 本体及其相关名称、代码的版权归其原作者所有（Copyright (c) 2026 SonettoHere，MIT 许可）。
 本项目为第三方配套工具，与上游作者无隶属关系；使用本启动器前请同时遵守上游项目的许可与说明。
+
+其中 **exe 图标与启动页标志取自上游项目的 logo**（`web/src/assets/icons/logo.svg` 的油灯图案），
+同样遵循上游的 MIT 许可；图标由 `tools/make_icon.py` 从该 SVG 渲染生成（深色圆角底板版为默认，
+`assets/app-glyph.ico` 是透明背景的原版观感备选）。

@@ -56,7 +56,7 @@ foreach ($item in $files) {
     Copy-Item (Join-Path $source $item) (Join-Path $WorkDir $item) -Force
 }
 
-foreach ($dir in @('Native', 'assets', 'wrappers')) {
+foreach ($dir in @('Native', 'assets', 'wrappers', 'tools')) {
     $target = Join-Path $WorkDir $dir
     New-Item -ItemType Directory -Force -Path $target | Out-Null
     Copy-Item (Join-Path $source "$dir\*") $target -Recurse -Force
