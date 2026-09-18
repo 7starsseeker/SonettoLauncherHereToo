@@ -1,4 +1,4 @@
-# SonettoHere Launcher
+# SonettoLauncher
 
 **SonettoHere 的独立桌面启动器** —— 一个 exe 包办：拉起后端与前端、在自带窗口里显示界面、关闭时优雅退出，
 并整合「初始化环境」与「检查更新」两个脚本的全部功能。
@@ -15,6 +15,17 @@
 
 ---
 
+## 命名
+
+| 名称 | 含义 |
+|---|---|
+| **SonettoLauncher** | 本工具（启动器）的名字：exe 文件名、窗口标题、`%LOCALAPPDATA%` 数据目录、Release 附件名都用它 |
+| **SonettoLauncherHereToo** | 本仓库（项目）名：呼应上游 **SonettoHere** ——「Sonetto 的 Launcher 也在这儿」 |
+| SonettoHere | 上游本体（被启动器管理的那个应用），版本号来自它的 `version.py` |
+
+启动器自身版本从 **1.0** 起（见 `SonettoLauncher.csproj` 的 `<Version>`），与本体版本相互独立：
+窗口标题形如 `SonettoLauncher v1.0.3 — SonettoHere v4.0.0`。
+
 ## 与上游仓库的关系
 
 | | 仓库 | 说明 |
@@ -24,7 +35,7 @@
 
 - 本仓库**不包含**上游源码，也不是上游的分支。它只是一层「外壳」：安装、启动、关闭、初始化、更新。
 - 启动器**不修改上游任何文件**：它以命令行方式调用上游的 `main.py`、`setup_guide.py`、`upgrade.py`，
-  所有新增内容都在自己的目录里，运行时数据只写 `%LOCALAPPDATA%\SonettoHereLauncher\`。
+  所有新增内容都在自己的目录里，运行时数据只写 `%LOCALAPPDATA%\SonettoLauncher\`。
 - 上游自带的 `start.bat` / `setup.bat` / `upgrade.bat` **保持可用**，与本启动器可以并存（注意别同时启动两套服务即可）。
 - 本启动器的源码**不在上游仓库里**，也不会随上游 PR 提交：开发者的工作副本里它只是与项目目录并排的一个
   本地文件夹，并在本地仓库的 `.git/info/exclude` 中被排除（该文件不参与提交），因此上游仓库与任何 PR
@@ -65,8 +76,8 @@
 
 | 附件 | 大小 | 运行要求 |
 |---|---|---|
-| `SonettoHereLauncher-<版本>-win-x64-self-contained.exe` | 约 63 MB | 无需安装任何 .NET 运行时，双击即用 |
-| `SonettoHereLauncher-<版本>-win-x64-framework-dependent.exe` | 约 1.3 MB | 需已安装 [.NET 8 桌面运行时](https://dotnet.microsoft.com/download/dotnet/8.0) |
+| `SonettoLauncher-<版本>-win-x64-self-contained.exe` | 约 63 MB | 无需安装任何 .NET 运行时，双击即用 |
+| `SonettoLauncher-<版本>-win-x64-framework-dependent.exe` | 约 1.3 MB | 需已安装 [.NET 8 桌面运行时](https://dotnet.microsoft.com/download/dotnet/8.0) |
 
 使用步骤：
 
@@ -104,7 +115,7 @@ pwsh build.ps1 -Only FrameworkDependent
 | 停止服务 | 优雅停止两端，页面切回状态页，可再一键启动 |
 | 初始化环境 | 停服 → 备份配置 → 窗口内执行 `python setup_guide.py`（等价 `setup.bat`）→ 自动启动服务 |
 | 检查更新 | 停服 → 备份配置 → 窗口内执行 `.venv\Scripts\python upgrade.py`（等价 `upgrade.bat`）→ 按结局分别处理（见下） |
-| 打开日志 | 打开 `%LOCALAPPDATA%\SonettoHereLauncher\logs` |
+| 打开日志 | 打开 `%LOCALAPPDATA%\SonettoLauncher\logs` |
 | 浏览器打开 | 用系统默认浏览器打开当前界面地址 |
 
 窗口主体是内嵌页面：启动阶段显示进度、步骤与实时日志（含可点击的补救按钮：重试 / 初始化 / 打开日志 / 选择项目目录）。
@@ -158,7 +169,7 @@ pwsh build.ps1 -Only FrameworkDependent
 因此执行前会把 `config/` 下的关键文件原样拷一份到：
 
 ```
-%LOCALAPPDATA%\SonettoHereLauncher\backups\<setup|upgrade>-<时间戳>\
+%LOCALAPPDATA%\SonettoLauncher\backups\<setup|upgrade>-<时间戳>\
 ```
 
 包含 `providers.yaml`、`auth_token.yaml`、`path_whitelist.yaml`、`mcp_servers.yaml`、`.env`
@@ -167,7 +178,7 @@ pwsh build.ps1 -Only FrameworkDependent
 
 ## 文件位置
 
-启动器不在上游项目目录里写任何东西，自己的数据都在 `%LOCALAPPDATA%\SonettoHereLauncher\`：
+启动器不在上游项目目录里写任何东西，自己的数据都在 `%LOCALAPPDATA%\SonettoLauncher\`：
 
 | 路径 | 内容 |
 |---|---|
@@ -202,7 +213,7 @@ pwsh build.ps1 -Only FrameworkDependent
 
 ```
 launcher/
-├── SonettoHereLauncher.csproj      # net8.0-windows / WinForms / 单文件发布配置
+├── SonettoLauncher.csproj      # net8.0-windows / WinForms / 单文件发布配置
 ├── app.manifest                    # PerMonitorV2 DPI + 长路径
 ├── Program.cs / MainForm.cs        # 入口与主窗口（工具栏、WebView2、状态页、关闭流程）
 ├── ServiceManager.cs               # 启动编排、健康轮询、端口冲突、外部服务接管
@@ -229,11 +240,14 @@ pwsh publish-release.ps1 -Notes "本次更新说明"     # 用 csproj 版本号�
 
 `publish-repo.ps1` 使用临时 git 工作目录（默认 `Q:\TEMP\SonettoLauncherHereToo`），
 只把源码拷过去提交推送，不会在上游项目里产生嵌套仓库；仓库里的 `.gitignore` 已排除 `dist/`，
-预编译产物不会误提交。`publish-release.ps1` 的 tag 取自 `SonettoHereLauncher.csproj` 的 `<Version>`，
+预编译产物不会误提交。`publish-release.ps1` 的 tag 取自 `SonettoLauncher.csproj` 的 `<Version>`，
 Release 已存在时会补传/覆盖附件，方便重打包后刷新。
 
 ## 更新日志
 
+- **v1.0.3** — 统一命名：工具（exe/程序集/产品名/窗口标题/`%LOCALAPPDATA%` 数据目录/Release 附件名）一律叫
+  **SonettoLauncher**，仓库名保持 **SonettoLauncherHereToo**；首次启动会把旧目录 `%LOCALAPPDATA%\SonettoHereLauncher`
+  的数据迁过来（整体改名失败时逐个复制配置与备份，并在日志里说明）。
 - **v1.0.2** — 加上 exe 图标（取自上游项目 `web/src/assets/icons/logo.svg` 的提灯标志，由 `tools/make_icon.py`
   渲染成 16–256px 多尺寸 ico），窗口标题栏与对话框同样使用该图标，启动页标题旁也显示同一标志；
   状态栏三档区分（运行中 / 无响应（进程仍在）/ 已停止）并在状态变化时记入日志；

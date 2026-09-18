@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using SonettoHere.Launcher.Native;
+using SonettoLauncher.Native;
 
-namespace SonettoHere.Launcher;
+namespace SonettoLauncher;
 
 /// <summary>
 /// 在启动器窗口内运行 setup_guide.py / upgrade.py 这类交互式脚本。

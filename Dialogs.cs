@@ -1,6 +1,6 @@
 using System.Windows.Forms;
 
-namespace SonettoHere.Launcher;
+namespace SonettoLauncher;
 
 /// <summary>
 /// 对话框基类：全部用 AutoSize 布局，不用固定像素尺寸 ——

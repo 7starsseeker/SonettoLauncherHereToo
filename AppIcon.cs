@@ -2,7 +2,7 @@ using System.Drawing;
 using System.IO;
 using System.Reflection;
 
-namespace SonettoHere.Launcher;
+namespace SonettoLauncher;
 
 /// <summary>
 /// 窗口图标（标题栏 / 任务栏）。

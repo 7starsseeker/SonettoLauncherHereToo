@@ -4,8 +4,8 @@
 
 .DESCRIPTION
     产出两种形式的单文件 exe（都在 launcher\dist\ 下，已被 .gitignore 忽略）：
-      dist\self-contained\SonettoHereLauncher.exe        自包含，目标机器无需安装任何运行时（约 70 MB）
-      dist\framework-dependent\SonettoHereLauncher.exe   依赖 .NET 8 桌面运行时（约 2 MB）
+      dist\self-contained\SonettoLauncher.exe        自包含，目标机器无需安装任何运行时（约 70 MB）
+      dist\framework-dependent\SonettoLauncher.exe   依赖 .NET 8 桌面运行时（约 2 MB）
 
 .PARAMETER Only
     All（默认）/ SelfContained / FrameworkDependent。
@@ -23,7 +23,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$project = Join-Path $here 'SonettoHereLauncher.csproj'
+$project = Join-Path $here 'SonettoLauncher.csproj'
 $dist = Join-Path $here 'dist'
 
 function Invoke-Publish {
@@ -59,14 +59,14 @@ function Invoke-Publish {
         throw "dotnet publish 失败（exit=$LASTEXITCODE）"
     }
 
-    $exe = Join-Path $OutputDir 'SonettoHereLauncher.exe'
+    $exe = Join-Path $OutputDir 'SonettoLauncher.exe'
     if (-not (Test-Path $exe)) {
         throw "没有找到产物：$exe"
     }
 
     # 清理多余文件，只留 exe
     Get-ChildItem -Path $OutputDir -File |
-        Where-Object { $_.Name -ne 'SonettoHereLauncher.exe' } |
+        Where-Object { $_.Name -ne 'SonettoLauncher.exe' } |
         Remove-Item -Force -ErrorAction SilentlyContinue
 
     $size = [math]::Round((Get-Item $exe).Length / 1MB, 1)

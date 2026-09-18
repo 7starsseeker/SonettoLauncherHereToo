@@ -8,14 +8,15 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
 
-    <AssemblyName>SonettoHereLauncher</AssemblyName>
-    <RootNamespace>SonettoHere.Launcher</RootNamespace>
+    <AssemblyName>SonettoLauncher</AssemblyName>
+    <RootNamespace>SonettoLauncher</RootNamespace>
     <!-- 启动器自己的版本号，与上游本体的版本（version.py）相互独立 -->
-    <Version>1.0.2</Version>
-    <FileVersion>1.0.2.0</FileVersion>
+    <Version>1.0.3</Version>
+    <FileVersion>1.0.3.0</FileVersion>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <Product>SonettoHere 启动器</Product>
-    <Company>SonettoHere</Company>
+    <Product>SonettoLauncher</Product>
+    <Description>SonettoHere 的第三方独立启动器（一键启动 / 内嵌界面 / 优雅退出，整合初始化与更新）</Description>
+    <Company>SonettoLauncher</Company>
     <Platforms>x64</Platforms>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <ApplicationManifest>app.manifest</ApplicationManifest>

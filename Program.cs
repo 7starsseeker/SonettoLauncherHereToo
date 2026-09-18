@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Windows.Forms;
 
-namespace SonettoHere.Launcher;
+namespace SonettoLauncher;
 
 internal static class Program
 {
@@ -22,7 +22,7 @@ internal static class Program
         {
             MessageBox.Show(
                 $"启动器发生未处理错误：{Environment.NewLine}{Environment.NewLine}{ex}",
-                "SonettoHere 启动器",
+                "SonettoLauncher",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
         }

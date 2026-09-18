@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
-using SonettoHere.Launcher.Native;
+using SonettoLauncher.Native;
 
-namespace SonettoHere.Launcher;
+namespace SonettoLauncher;
 
 internal sealed class StartReport
 {

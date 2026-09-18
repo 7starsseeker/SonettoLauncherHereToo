@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace SonettoHere.Launcher.Native;
+namespace SonettoLauncher.Native;
 
 /// <summary>
 /// HTTP 探活工具。

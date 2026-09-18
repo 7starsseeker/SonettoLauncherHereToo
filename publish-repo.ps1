@@ -31,7 +31,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $source = $PSScriptRoot
-if (-not (Test-Path (Join-Path $source 'SonettoHereLauncher.csproj'))) {
+if (-not (Test-Path (Join-Path $source 'SonettoLauncher.csproj'))) {
     throw "请在 launcher 目录下运行本脚本（当前：$source）"
 }
 
@@ -40,9 +40,15 @@ Write-Host "==> 临时仓库：$WorkDir" -ForegroundColor Cyan
 
 New-Item -ItemType Directory -Force -Path $WorkDir | Out-Null
 
+# ── 0. 先清空工作目录（保留 .git）────────────────────────────
+# 这样源目录里被重命名/删除的文件，在仓库里也会同步删除（否则旧文件会永久残留）
+Get-ChildItem -Path $WorkDir -Force |
+    Where-Object { $_.Name -ne '.git' } |
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+
 # ── 1. 拷贝源码（不含 build/、dist/）──────────────────────────
 $files = @(
-    'SonettoHereLauncher.csproj',
+    'SonettoLauncher.csproj',
     'Directory.Build.props',
     'app.manifest',
     'build.ps1',

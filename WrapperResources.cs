@@ -2,10 +2,10 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 
-namespace SonettoHere.Launcher;
+namespace SonettoLauncher;
 
 /// <summary>
-/// 把内嵌的 wrapper 脚本释放到 %LOCALAPPDATA%\SonettoHereLauncher\wrappers\。
+/// 把内嵌的 wrapper 脚本释放到 %LOCALAPPDATA%\SonettoLauncher\wrappers\。
 /// 这样 exe 是自包含的单文件，项目目录也不会多出任何文件。
 /// </summary>
 internal static class WrapperResources

@@ -1,7 +1,7 @@
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace SonettoHere.Launcher;
+namespace SonettoLauncher;
 
 /// <summary>
 /// 项目根目录定位与环境自检。启动器只读取项目文件，不做任何写入。

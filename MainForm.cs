@@ -4,9 +4,9 @@ using System.Text.Json;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
-using SonettoHere.Launcher.Native;
+using SonettoLauncher.Native;
 
-namespace SonettoHere.Launcher;
+namespace SonettoLauncher;
 
 /// <summary>
 /// 启动器主窗口：原生工具栏 + WebView2 显示界面。
@@ -66,7 +66,7 @@ internal sealed class MainForm : Form
         _job = new JobObject(_log);
         _log.Line += OnLauncherLogLine;
 
-        Text = $"SonettoHere 启动器 v{Program.Version}";
+        Text = $"SonettoLauncher v{Program.Version}";
         Icon = AppIcon.Create();
         Font = new Font("Microsoft YaHei UI", 9F);
         ClientSize = new Size(Math.Max(960, _config.WindowWidth), Math.Max(640, _config.WindowHeight));
@@ -156,7 +156,13 @@ internal sealed class MainForm : Form
 
     private async Task InitializeAsync()
     {
-        _log.Write($"[启动器] SonettoHere 启动器 v{Program.Version}，日志：{_log.FilePath}");
+        _log.Write($"[启动器] SonettoLauncher v{Program.Version}，日志：{_log.FilePath}");
+
+        // 数据目录从旧名（SonettoHereLauncher）搬过来的结果，方便排查「配置/备份去哪了」
+        if (LauncherPaths.MigrationNote is { Length: > 0 } migrationNote)
+        {
+            _log.Write($"[启动器] {migrationNote}");
+        }
 
         if (!_webViewInitialized)
         {
@@ -667,8 +673,9 @@ internal sealed class MainForm : Form
 
     private void UpdateWindowTitle()
     {
-        var appPart = string.IsNullOrWhiteSpace(_appVersion) ? "SonettoHere" : $"SonettoHere {_appVersion}";
-        Text = $"{appPart} — 启动器 v{Program.Version}";
+        // 工具名在前、被管理的应用版本在后（工具自己叫 SonettoLauncher，仓库叫 SonettoLauncherHereToo）
+        var appPart = string.IsNullOrWhiteSpace(_appVersion) ? string.Empty : $" — SonettoHere {_appVersion}";
+        Text = $"SonettoLauncher v{Program.Version}{appPart}";
     }
 
     private async Task RunUpgradeAsync()
@@ -933,7 +940,7 @@ internal sealed class MainForm : Form
             MessageBox.Show(
                 this,
                 "该目录里没有找到 main.py 与 web/package.json，请重新选择。",
-                "SonettoHere 启动器",
+                "SonettoLauncher",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
             return;

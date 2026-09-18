@@ -1,10 +1,10 @@
 using System.IO;
 using System.Text;
 
-namespace SonettoHere.Launcher;
+namespace SonettoLauncher;
 
 /// <summary>
-/// 启动器日志：写文件（%LOCALAPPDATA%\SonettoHereLauncher\logs）并广播给 UI。
+/// 启动器日志：写文件（%LOCALAPPDATA%\SonettoLauncher\logs）并广播给 UI。
 /// </summary>
 internal sealed class LogBus : IDisposable
 {

@@ -3,10 +3,10 @@
     把打包好的 exe 作为 GitHub Release 附件发布（**不**提交进仓库）。
 
 .DESCRIPTION
-    启动器自身版本从 SonettoHereLauncher.csproj 的 <Version> 读取，默认 tag 为 v<版本>。
+    启动器自身版本从 SonettoLauncher.csproj 的 <Version> 读取，默认 tag 为 v<版本>。
     上传 dist/ 下的两个产物：
-      · dist\self-contained\SonettoHereLauncher.exe      自包含，免运行时（约 63MB）
-      · dist\framework-dependent\SonettoHereLauncher.exe 框架依赖，需 .NET 8 桌面运行时（约 1.3MB）
+      · dist\self-contained\SonettoLauncher.exe      自包含，免运行时（约 63MB）
+      · dist\framework-dependent\SonettoLauncher.exe 框架依赖，需 .NET 8 桌面运行时（约 1.3MB）
     Release 已存在时改为补传附件（--clobber 覆盖），方便重打包后刷新。
 
 .EXAMPLE
@@ -28,7 +28,7 @@ $ErrorActionPreference = 'Stop'
 $source = $PSScriptRoot
 
 # ── 版本与 tag ──────────────────────────────────────────────
-[xml]$project = Get-Content (Join-Path $source 'SonettoHereLauncher.csproj')
+[xml]$project = Get-Content (Join-Path $source 'SonettoLauncher.csproj')
 $version = ($project.Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1)
 if (-not $version) { throw '未能从 csproj 读取 <Version>' }
 if (-not $Tag) { $Tag = "v$version" }
@@ -48,13 +48,13 @@ $assets = @()
 $assetTable = @()
 try {
     foreach ($variant in $variants.Keys) {
-        $candidate = Join-Path $source "dist\$variant\SonettoHereLauncher.exe"
+        $candidate = Join-Path $source "dist\$variant\SonettoLauncher.exe"
         if (-not (Test-Path $candidate)) {
             Write-Host "    [!] 缺少产物：$candidate（先跑 pwsh build.ps1）" -ForegroundColor Yellow
             continue
         }
 
-        $assetName = "SonettoHereLauncher-$version-win-x64-$variant.exe"
+        $assetName = "SonettoLauncher-$version-win-x64-$variant.exe"
         $staged = Join-Path $staging $assetName
         Copy-Item $candidate $staged -Force
         $assets += $staged

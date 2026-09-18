@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace SonettoHere.Launcher;
+namespace SonettoLauncher;
 
 /// <summary>进程相关小工具：查找可执行文件、整树强杀。</summary>
 internal static class ProcessUtil

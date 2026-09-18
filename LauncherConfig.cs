@@ -2,10 +2,10 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace SonettoHere.Launcher;
+namespace SonettoLauncher;
 
 /// <summary>
-/// 启动器本地配置（%LOCALAPPDATA%\SonettoHereLauncher\launcher.config.json）。
+/// 启动器本地配置（%LOCALAPPDATA%\SonettoLauncher\launcher.config.json）。
 /// 不放在项目目录里，避免污染仓库。
 /// </summary>
 internal sealed class LauncherConfig

@@ -1,7 +1,7 @@
 using System.IO;
 using System.Text;
 
-namespace SonettoHere.Launcher;
+namespace SonettoLauncher;
 
 /// <summary>
 /// 执行 setup / upgrade 前的配置备份。
@@ -9,7 +9,7 @@ namespace SonettoHere.Launcher;
 /// 为什么需要：<c>setup_guide.py</c> 会用模板覆盖 <c>config/personas/USER.md</c> 与
 /// <c>SOUL.md</c>（这两类文件在 .gitignore 里，git 救不回来），并会重跑依赖安装；
 /// <c>upgrade.py</c> 的迁移脚本也可能改写配置。所以动它们之前先原样拷一份到
-/// %LOCALAPPDATA%\SonettoHereLauncher\backups\ 下，随时可以人工回滚。
+/// %LOCALAPPDATA%\SonettoLauncher\backups\ 下，随时可以人工回滚。
 /// </summary>
 internal static class ConfigBackup
 {

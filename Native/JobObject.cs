@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 
-namespace SonettoHere.Launcher.Native;
+namespace SonettoLauncher.Native;
 
 /// <summary>
 /// 进程作业对象。使用 KILL_ON_JOB_CLOSE：启动器一旦退出（含被强杀/崩溃），

@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace SonettoHere.Launcher.Native;
+namespace SonettoLauncher.Native;
 
 /// <summary>
 /// Windows 控制台信号投递。用途有两条：
