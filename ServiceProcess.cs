@@ -356,6 +356,33 @@ internal sealed class ServiceProcess : IDisposable
         Exited?.Invoke(this, intentional);
     }
 
+    /// <summary>由启动器拉起、且进程仍在运行。</summary>
+    public bool IsManagedAndAlive => StartedByLauncher && !HasExited;
+
+    /// <summary>
+    /// 状态栏文案：把「进程已经没了」和「进程还在但没应答」区分开 ——
+    /// 后者（例如 uvicorn 监听被打挂、端口无响应）不去误报成「已停止」。
+    /// </summary>
+    public string DescribeRuntime(bool responding)
+    {
+        if (responding)
+        {
+            return StartedByLauncher ? "运行中" : "运行中（外部）";
+        }
+
+        if (IsManagedAndAlive)
+        {
+            return "无响应（进程仍在）";
+        }
+
+        if (!StartedByLauncher && Pid > 0)
+        {
+            return "无响应（外部进程）";
+        }
+
+        return "已停止";
+    }
+
     public string RecentOutput(int maxLines = 12)
     {
         lock (_gate)

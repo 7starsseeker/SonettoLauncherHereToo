@@ -99,7 +99,7 @@ pwsh build.ps1 -Only FrameworkDependent
 
 | 元素 | 说明 |
 |---|---|
-| ● 后端 / ● 前端 | 实时状态；若是外部启动的服务会标注「（外部）」 |
+| ● 后端 / ● 前端 | 实时状态，三档区分：**运行中**（绿色，外部启动的会标「（外部）」）／**无响应（进程仍在）**（橙色，端口不通但进程还没退出，例如监听被打挂）／**已停止**（红色，进程确实不在了）。每次状态变化都会在 `logs\launcher-*.log` 里留一条记录 |
 | 重启服务 | 依次优雅停止后重新拉起 |
 | 停止服务 | 优雅停止两端，页面切回状态页，可再一键启动 |
 | 初始化环境 | 停服 → 备份配置 → 窗口内执行 `python setup_guide.py`（等价 `setup.bat`）→ 自动启动服务 |
@@ -174,7 +174,7 @@ pwsh build.ps1 -Only FrameworkDependent
 | `launcher.config.json` | 项目目录、窗口尺寸、各阶段超时、是否使用 wrapper 等 |
 | `wrappers\` | 从 exe 内嵌资源释放出的两个 wrapper（内容一致时不重写） |
 | `scripts\` | 初始化 / 更新用的临时 `.cmd` |
-| `logs\` | 启动器日志与两端输出（`backend-*.log` / `frontend-*.log`，保留 7 天） |
+| `logs\` | 启动器日志与两端输出；**按会话分文件**（`launcher-*.log` / `backend-*.log` / `frontend-*.log`），保留 7 天。日志只追加不覆盖，历史会话的现场不会被后来的启动冲掉 |
 | `backups\` | 执行初始化 / 更新前的配置备份（保留最近 10 份） |
 | `webview2\` | WebView2 用户数据（登录态、localStorage 等） |
 
@@ -186,6 +186,7 @@ pwsh build.ps1 -Only FrameworkDependent
 | 后端启动超时 | 看 `logs\backend-*.log`；首次启动要加载 MCP / 工具链，可在配置里调大 `BackendReadyTimeoutSeconds` |
 | 前端起不来 | 看 `logs\frontend-*.log`；确认 `web\node_modules` 完整（缺就「检查更新」或 `cd web && npm install`） |
 | 后端「意外退出」但界面还在 | 多半是应用内的「重启后端」另起了进程，启动器会标记为外部服务；也可直接点「重启服务」 |
+| 工具栏显示「后端：无响应（进程仍在）」 | 进程没死，但端口不通 —— 先看 `logs\launcher-*.log` 里那条状态变化记录与 `logs\backend-*.log` 的最后几行，再点「重启服务」即可恢复 |
 | 关闭窗口后端口仍被占用 | 看 `logs\launcher-*.log` 的停止记录，会写明是优雅退出还是被强制终止 |
 | 内嵌界面空白 | 缺 WebView2 运行时，启动器应已自动降级为独立窗口；也可手动安装 WebView2 Runtime 后重试 |
 
@@ -233,8 +234,10 @@ Release 已存在时会补传/覆盖附件，方便重打包后刷新。
 
 ## 更新日志
 
-- **v1.0.2** — 加上 exe 图标（取自上游项目 `web/src/assets/icons/logo.svg` 的油灯标志，由 `tools/make_icon.py`
-  渲染成 16–256px 多尺寸 ico）；启动页标题旁也显示同一标志。
+- **v1.0.2** — 加上 exe 图标（取自上游项目 `web/src/assets/icons/logo.svg` 的提灯标志，由 `tools/make_icon.py`
+  渲染成 16–256px 多尺寸 ico），窗口标题栏与对话框同样使用该图标，启动页标题旁也显示同一标志；
+  状态栏三档区分（运行中 / 无响应（进程仍在）/ 已停止）并在状态变化时记入日志；
+  修复启动器日志每次启动被覆盖的问题（改为按会话分文件）；修复窗口标题里的版本号一直显示 1.0.0 的问题。
 - **v1.0.1** — 「检查更新」按实际结局区分提示：更新完成 / 已是最新（无需更新）/ 未发现上游更新 / 已终止 / 更新失败；
   后四种保留任务控制台输出便于排查；「初始化环境」同步区分完成 / 仍不完整 / 已终止 / 失败。
 - **v1.0.0** — 首个版本：一键启动、WebView2 内嵌界面、三级优雅退出与 Job Object 防孤儿、

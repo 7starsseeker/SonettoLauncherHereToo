@@ -15,6 +15,7 @@ internal abstract class AutoSizedDialog : Form
         MaximizeBox = false;
         MinimizeBox = false;
         ShowInTaskbar = false;
+        Icon = AppIcon.Create();
         AutoScaleMode = AutoScaleMode.Font;
         Font = new Font("Microsoft YaHei UI", 9F);
         Padding = new Padding(22, 18, 22, 16);

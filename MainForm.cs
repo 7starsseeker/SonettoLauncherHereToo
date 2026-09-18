@@ -61,11 +61,13 @@ internal sealed class MainForm : Form
         _args = args;
 
         LauncherPaths.EnsureCreated();
-        _log = new LogBus(Path.Combine(LauncherPaths.LogDir, $"launcher-{DateTime.Now:yyyyMMdd}.log"));
+        // 按会话分文件：日志只追加不覆盖，历史会话的现场不会丢（后端/前端日志同样按会话落盘）
+        _log = new LogBus(Path.Combine(LauncherPaths.LogDir, $"launcher-{DateTime.Now:yyyyMMdd-HHmmss}.log"));
         _job = new JobObject(_log);
         _log.Line += OnLauncherLogLine;
 
         Text = $"SonettoHere 启动器 v{Program.Version}";
+        Icon = AppIcon.Create();
         Font = new Font("Microsoft YaHei UI", 9F);
         ClientSize = new Size(Math.Max(960, _config.WindowWidth), Math.Max(640, _config.WindowHeight));
         MinimumSize = new Size(900, 600);
@@ -989,15 +991,8 @@ internal sealed class MainForm : Form
                 return;
             }
 
-            _backendLabel.Text = backendAlive
-                ? $"● 后端：运行中{(services.BackendAdopted ? "（外部）" : string.Empty)}"
-                : "● 后端：已停止";
-            _backendLabel.ForeColor = backendAlive ? Color.SeaGreen : Color.Firebrick;
-
-            _frontendLabel.Text = frontendAlive
-                ? $"● 前端：运行中{(services.FrontendAdopted ? "（外部）" : string.Empty)}"
-                : "● 前端：已停止";
-            _frontendLabel.ForeColor = frontendAlive ? Color.SeaGreen : Color.Firebrick;
+            ApplyServiceStatus(_backendLabel, "后端", services.Backend, backendAlive);
+            ApplyServiceStatus(_frontendLabel, "前端", services.Frontend, frontendAlive);
         }
         finally
         {
@@ -1005,7 +1000,30 @@ internal sealed class MainForm : Form
         }
     }
 
+    /// <summary>
+    /// 刷新单个状态项，并在状态**变化**时记一条日志 ——
+    /// 以后再出现「后端未运行」这类反馈，日志里能直接看到是何时、从什么状态变成的。
+    /// </summary>
+    private void ApplyServiceStatus(ToolStripStatusLabel label, string name, ServiceProcess service, bool responding)
+    {
+        var text = service.DescribeRuntime(responding);
+        var previous = _statusText.TryGetValue(name, out var last) ? last : string.Empty;
+
+        if (previous != text)
+        {
+            _log.Write($"[启动器] {name}状态：{(previous.Length == 0 ? "（初始）" : previous)} → {text}"
+                       + (responding ? string.Empty : $"（PID {service.Pid}，进程{(service.HasExited ? "已退出" : "仍在")}）"));
+            _statusText[name] = text;
+        }
+
+        label.Text = $"● {name}：{text}";
+        label.ForeColor = responding
+            ? Color.SeaGreen
+            : service.IsManagedAndAlive ? Color.DarkOrange : Color.Firebrick;
+    }
+
     private bool _statusProbeBusy;
+    private readonly Dictionary<string, string> _statusText = new();
 
     private void SetBusy(bool busy, string hint)
     {

@@ -48,6 +48,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="assets\loading.html" LogicalName="loading.html" />
+    <EmbeddedResource Include="assets\app.ico" LogicalName="app.ico" />
     <EmbeddedResource Include="wrappers\backend_wrapper.py" LogicalName="backend_wrapper.py" />
     <EmbeddedResource Include="wrappers\vite_run.mjs" LogicalName="vite_run.mjs" />
   </ItemGroup>
