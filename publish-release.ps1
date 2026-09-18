@@ -35,35 +35,53 @@ if (-not $Tag) { $Tag = "v$version" }
 if (-not $Title) { $Title = "SonettoHere Launcher $Tag" }
 
 # ── 产物检查 ────────────────────────────────────────────────
-$selfContained = Join-Path $source 'dist\self-contained\SonettoHereLauncher.exe'
-$frameworkDependent = Join-Path $source 'dist\framework-dependent\SonettoHereLauncher.exe'
+$variants = [ordered]@{
+    'self-contained'      = '自包含（免运行时，约 63MB）'
+    'framework-dependent' = '框架依赖（需 .NET 8 桌面运行时，约 1.3MB）'
+}
+
+# 附件名必须唯一，否则同名会互相覆盖；统一带版本号与变体名
+$staging = Join-Path $env:TEMP ("sonetto-release-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
+New-Item -ItemType Directory -Force -Path $staging | Out-Null
+
 $assets = @()
-foreach ($candidate in @($selfContained, $frameworkDependent)) {
-    if (Test-Path $candidate) {
-        $assets += $candidate
-    } else {
-        Write-Host "    [!] 缺少产物：$candidate" -ForegroundColor Yellow
+$assetTable = @()
+try {
+    foreach ($variant in $variants.Keys) {
+        $candidate = Join-Path $source "dist\$variant\SonettoHereLauncher.exe"
+        if (-not (Test-Path $candidate)) {
+            Write-Host "    [!] 缺少产物：$candidate（先跑 pwsh build.ps1）" -ForegroundColor Yellow
+            continue
+        }
+
+        $assetName = "SonettoHereLauncher-$version-win-x64-$variant.exe"
+        $staged = Join-Path $staging $assetName
+        Copy-Item $candidate $staged -Force
+        $assets += $staged
+        $assetTable += [pscustomobject]@{
+            Name = $assetName
+            Size = [math]::Round((Get-Item $candidate).Length / 1MB, 1)
+            Note = $variants[$variant]
+        }
     }
-}
 
-if ($assets.Count -eq 0) {
-    throw 'dist/ 下没有任何产物，请先运行：pwsh build.ps1'
-}
+    if ($assets.Count -eq 0) {
+        throw 'dist/ 下没有任何产物，请先运行：pwsh build.ps1'
+    }
 
-# ── Release 说明 ────────────────────────────────────────────
-$sizeOf = { param($path) [math]::Round((Get-Item $path).Length / 1MB, 1) }
+    # ── Release 说明 ────────────────────────────────────────
+    $rows = ($assetTable | ForEach-Object { "| ``$($_.Name)`` | 约 $($_.Size) MB | $($_.Note) |" }) -join "`n"
 
-$body = @"
+    $body = @"
 ## 下载
 
-| 产物 | 大小 | 运行要求 |
+| 附件 | 大小 | 运行要求 |
 |---|---|---|
-| ``SonettoHereLauncher.exe``（自包含） | 约 $(& $sizeOf $selfContained) MB | 无需安装任何 .NET 运行时，双击即用 |
-| ``SonettoHereLauncher.exe``（框架依赖） | 约 1.3 MB | 需已安装 [.NET 8 桌面运行时](https://dotnet.microsoft.com/download/dotnet/8.0) |
+$rows
 
 ## 使用
 
-1. 下载上面任一 exe；
+1. 下载上面任一 exe（文件名里的 `self-contained` = 免运行时，`framework-dependent` = 需 .NET 8 桌面运行时）；
 2. 放到 SonettoHere 项目根目录（与 ``start.bat`` 并排）双击；放在别处也行，启动器会自动向上查找项目目录，找不到会弹目录选择；
 3. 需要 **Microsoft Edge WebView2 Runtime**（Windows 11 与多数 Windows 10 已预装；缺失时自动降级为独立 Edge 窗口显示）。
 
@@ -74,44 +92,55 @@ $body = @"
 - 本启动器是 SonettoHere 的第三方配套工具，不修改上游任何代码。
 "@
 
-if ($NotesFile) {
-    if (-not (Test-Path $NotesFile)) { throw "找不到说明文件：$NotesFile" }
-    $body = (Get-Content $NotesFile -Raw) + "`n`n" + $body
-} elseif ($Notes) {
-    $body = "## 本次更新`n`n$Notes`n`n" + $body
-}
-
-# ── 上传 ────────────────────────────────────────────────────
-gh repo view $Repo --json name 2>$null | Out-Null
-if ($LASTEXITCODE -ne 0) {
-    throw "仓库 $Repo 不存在，请先运行：pwsh publish-repo.ps1"
-}
-
-gh release view $Tag --repo $Repo 2>$null | Out-Null
-$releaseExists = ($LASTEXITCODE -eq 0)
-
-$assetNames = ($assets | ForEach-Object { Split-Path $_ -Leaf }) -join ', '
-Write-Host "==> 目标仓库：$Repo" -ForegroundColor Cyan
-Write-Host "==> Tag：$Tag（$(if ($releaseExists) { '已存在，补传附件' } else { '新建 Release' })）" -ForegroundColor Cyan
-Write-Host "==> 附件：$assetNames" -ForegroundColor Cyan
-
-if ($releaseExists) {
-    gh release upload $Tag --repo $Repo @assets --clobber
-    if ($Notes -or $NotesFile) {
-        gh release edit $Tag --repo $Repo --notes $body | Out-Null
-        Write-Host "==> 已更新 Release 说明" -ForegroundColor DarkGray
+    if ($NotesFile) {
+        if (-not (Test-Path $NotesFile)) { throw "找不到说明文件：$NotesFile" }
+        $body = (Get-Content $NotesFile -Raw) + "`n`n" + $body
+    } elseif ($Notes) {
+        $body = "## 本次更新`n`n$Notes`n`n" + $body
     }
-} else {
-    $createArgs = @('release', 'create', $Tag, '--repo', $Repo, '--title', $Title, '--notes', $body)
-    if ($Draft) { $createArgs += '--draft' }
-    if ($Prerelease) { $createArgs += '--prerelease' }
-    $createArgs += $assets
-    gh @createArgs
-}
 
-if ($LASTEXITCODE -eq 0) {
-    Write-Host ""
-    Write-Host "完成：https://github.com/$Repo/releases/tag/$Tag" -ForegroundColor Green
-} else {
-    throw "发布失败（exit=$LASTEXITCODE）"
+    # ── 上传 ────────────────────────────────────────────────
+    gh repo view $Repo --json name 2>$null | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        throw "仓库 $Repo 不存在，请先运行：pwsh publish-repo.ps1"
+    }
+
+    gh release view $Tag --repo $Repo 2>$null | Out-Null
+    $releaseExists = ($LASTEXITCODE -eq 0)
+
+    Write-Host "==> 目标仓库：$Repo" -ForegroundColor Cyan
+    Write-Host "==> Tag：$Tag（$(if ($releaseExists) { '已存在，补传附件' } else { '新建 Release' })）" -ForegroundColor Cyan
+    foreach ($asset in $assetTable) {
+        Write-Host "    附件：$($asset.Name)  ($($asset.Size) MB)" -ForegroundColor Cyan
+    }
+
+    if ($releaseExists) {
+        gh release upload $Tag --repo $Repo @assets --clobber
+        if ($Notes -or $NotesFile) {
+            gh release edit $Tag --repo $Repo --notes $body | Out-Null
+            Write-Host "==> 已更新 Release 说明" -ForegroundColor DarkGray
+        }
+    } else {
+        # 新建时：先建空 Release，再逐个上传附件（避免 gh 在上传失败时把整个 Release 回滚掉）
+        $createArgs = @('release', 'create', $Tag, '--repo', $Repo, '--title', $Title, '--notes', $body)
+        if ($Draft) { $createArgs += '--draft' }
+        if ($Prerelease) { $createArgs += '--prerelease' }
+        gh @createArgs
+
+        if ($LASTEXITCODE -ne 0) {
+            throw "创建 Release 失败（exit=$LASTEXITCODE）"
+        }
+
+        gh release upload $Tag --repo $Repo @assets --clobber
+    }
+
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host ""
+        Write-Host "完成：https://github.com/$Repo/releases/tag/$Tag" -ForegroundColor Green
+    } else {
+        throw "发布失败（exit=$LASTEXITCODE）"
+    }
+}
+finally {
+    Remove-Item $staging -Recurse -Force -ErrorAction SilentlyContinue
 }

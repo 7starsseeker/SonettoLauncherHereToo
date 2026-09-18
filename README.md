@@ -63,8 +63,8 @@
 
 | 附件 | 大小 | 运行要求 |
 |---|---|---|
-| `SonettoHereLauncher.exe`（自包含） | 约 63 MB | 无需安装任何 .NET 运行时，双击即用 |
-| `SonettoHereLauncher.exe`（框架依赖） | 约 1.3 MB | 需已安装 [.NET 8 桌面运行时](https://dotnet.microsoft.com/download/dotnet/8.0) |
+| `SonettoHereLauncher-<版本>-win-x64-self-contained.exe` | 约 63 MB | 无需安装任何 .NET 运行时，双击即用 |
+| `SonettoHereLauncher-<版本>-win-x64-framework-dependent.exe` | 约 1.3 MB | 需已安装 [.NET 8 桌面运行时](https://dotnet.microsoft.com/download/dotnet/8.0) |
 
 使用步骤：
 
