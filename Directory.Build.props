@@ -1,0 +1,9 @@
+<Project>
+
+  <!-- 把 bin/obj 重定向到 build/ 下：.gitignore 已忽略 build/，构建产物不会污染 git status。 -->
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>build\obj\</BaseIntermediateOutputPath>
+    <BaseOutputPath>build\bin\</BaseOutputPath>
+  </PropertyGroup>
+
+</Project>

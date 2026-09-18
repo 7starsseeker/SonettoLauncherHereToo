@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <title>SonettoHere 启动中</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #14161c;
+      --panel: #1c1f27;
+      --text: #e6e8ef;
+      --muted: #8b93a7;
+      --accent: #7c9cff;
+      --ok: #4ade80;
+      --err: #f87171;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Microsoft YaHei UI", "Segoe UI", system-ui, sans-serif;
+      overflow: hidden;
+    }
+
+    header {
+      padding: 28px 40px 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding: 18px 40px 24px;
+      overflow: auto;
+    }
+
+    .steps {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .steps li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .steps li .dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid currentColor;
+      flex: none;
+    }
+
+    .steps li[data-state="active"] {
+      color: var(--accent);
+    }
+
+    .steps li[data-state="active"] .dot {
+      border-color: var(--accent);
+      border-top-color: transparent;
+      animation: spin 0.9s linear infinite;
+    }
+
+    .steps li[data-state="done"] {
+      color: var(--ok);
+    }
+
+    .steps li[data-state="done"] .dot {
+      border-color: var(--ok);
+      background: var(--ok);
+    }
+
+    .steps li[data-state="error"] {
+      color: var(--err);
+    }
+
+    .steps li[data-state="error"] .dot {
+      border-color: var(--err);
+      background: var(--err);
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .banner {
+      display: none;
+      background: var(--panel);
+      border: 1px solid #2a2f3a;
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+
+    .banner.visible {
+      display: block;
+    }
+
+    .banner h2 {
+      margin: 0 0 8px;
+      font-size: 15px;
+    }
+
+    .banner p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .banner.error h2 {
+      color: var(--err);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button {
+      font: inherit;
+      font-size: 13px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid #333a49;
+      background: #22262f;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #10121a;
+      font-weight: 600;
+    }
+
+    .logbox {
+      flex: 1;
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .term {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 320px;
+      flex: 2;
+    }
+
+    .term.visible {
+      display: flex;
+    }
+
+    .term-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .term-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .term-hint {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    pre#term-out {
+      margin: 0;
+      padding: 12px 14px;
+      flex: 1;
+      overflow: auto;
+      background: #0b0d12;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      color: #d7dced;
+      font-family: Consolas, "Cascadia Mono", monospace;
+      font-size: 12.5px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .term-input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .term-input-row input {
+      flex: 1;
+      font: inherit;
+      font-family: Consolas, "Cascadia Mono", monospace;
+      font-size: 13px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid #333a49;
+      background: #14161c;
+      color: var(--text);
+      outline: none;
+    }
+
+    .term-input-row input:focus {
+      border-color: var(--accent);
+    }
+
+    .logbox summary {
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 13px;
+      outline: none;
+    }
+
+    pre#log {
+      margin: 10px 0 0;
+      padding: 12px 14px;
+      flex: 1;
+      overflow: auto;
+      background: #0f1116;
+      border: 1px solid #242a36;
+      border-radius: 8px;
+      color: #9aa4bb;
+      font-family: Consolas, "Cascadia Mono", monospace;
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1 id="title">SonettoHere</h1>
+    <div class="subtitle" id="subtitle">启动器正在准备运行环境</div>
+  </header>
+
+  <main>
+    <ul class="steps" id="steps">
+      <li data-step="root" data-state="pending">
+        <span class="dot"></span><span class="label">定位项目目录</span>
+      </li>
+      <li data-step="backend" data-state="pending">
+        <span class="dot"></span><span class="label">启动后端（:8000）</span>
+      </li>
+      <li data-step="frontend" data-state="pending">
+        <span class="dot"></span><span class="label">启动前端（:5173）</span>
+      </li>
+      <li data-step="ready" data-state="pending">
+        <span class="dot"></span><span class="label">打开界面</span>
+      </li>
+    </ul>
+
+    <section class="banner" id="banner">
+      <h2 id="banner-title"></h2>
+      <p id="banner-text"></p>
+      <div class="actions" id="banner-actions"></div>
+    </section>
+
+    <section class="term" id="term">
+      <div class="term-head">
+        <span class="term-title" id="term-title">任务控制台</span>
+        <span class="term-hint">脚本输出实时显示在这里；出现提示时在下面输入并按 Enter</span>
+        <button id="term-stop">终止脚本</button>
+      </div>
+      <pre id="term-out"></pre>
+      <div class="term-input-row">
+        <input id="term-input" type="text" autocomplete="off" spellcheck="false"
+          placeholder="在此输入后按 Enter 发送（脚本提示输入时使用；直接回车＝采用默认值）" />
+        <button id="term-send">发送</button>
+      </div>
+    </section>
+
+    <details class="logbox" id="logbox">
+      <summary>运行日志</summary>
+      <pre id="log"></pre>
+    </details>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var MAX_LOG_LINES = 600;
+      var MAX_TERM_LINES = 1500;
+      var logElement = document.getElementById("log");
+      var bannerElement = document.getElementById("banner");
+      var bannerTitle = document.getElementById("banner-title");
+      var bannerText = document.getElementById("banner-text");
+      var bannerActions = document.getElementById("banner-actions");
+      var titleElement = document.getElementById("title");
+      var subtitleElement = document.getElementById("subtitle");
+      var termElement = document.getElementById("term");
+      var termTitleElement = document.getElementById("term-title");
+      var termOutElement = document.getElementById("term-out");
+      var termInputElement = document.getElementById("term-input");
+      var termSendButton = document.getElementById("term-send");
+      var termStopButton = document.getElementById("term-stop");
+
+      var termLines = [];
+      var termCurrent = "";
+      var termPendingCr = false;
+      // CSI / OSC 转义序列（pip、npm 会输出颜色与进度控制符）
+      var ansiPattern = /\u001b\[[0-9;?]*[ -\/]*[@-~]/g;
+      var oscPattern = /\u001b\][^\u0007]*(\u0007|\u001b\\)/g;
+
+      function send(command) {
+        if (window.chrome && window.chrome.webview) {
+          window.chrome.webview.postMessage({ cmd: command });
+        }
+      }
+
+      function termRender() {
+        termOutElement.textContent = termLines.join("\n") + (termCurrent ? "\n" + termCurrent : "");
+        termOutElement.scrollTop = termOutElement.scrollHeight;
+      }
+
+      function termOpen(titleText) {
+        termLines = [];
+        termCurrent = "";
+        termPendingCr = false;
+        termTitleElement.textContent = titleText || "任务控制台";
+        termElement.className = "term visible";
+        termRender();
+        termInputElement.value = "";
+        termInputElement.focus();
+      }
+
+      function termWrite(text) {
+        if (!text) {
+          return;
+        }
+
+        var clean = String(text).replace(oscPattern, "").replace(ansiPattern, "");
+
+        for (var i = 0; i < clean.length; i++) {
+          var ch = clean.charAt(i);
+
+          // Windows 下 Python 输出的是 CRLF：\r\n 是一个换行，不能把行内容清掉。
+          // 只有「孤立的 \r」才是回到行首重写（pip / npm 的进度条就是这么刷的）。
+          if (termPendingCr) {
+            if (ch === "\n") {
+              termLines.push(termCurrent);
+              termCurrent = "";
+              termPendingCr = false;
+              continue;
+            }
+
+            termCurrent = "";
+            termPendingCr = false;
+          }
+
+          if (ch === "\r") {
+            termPendingCr = true;
+          } else if (ch === "\n") {
+            termLines.push(termCurrent);
+            termCurrent = "";
+          } else if (ch === "\b") {
+            termCurrent = termCurrent.slice(0, -1);
+          } else if (ch !== "\u0007") {
+            termCurrent += ch;
+          }
+        }
+
+        if (termLines.length > MAX_TERM_LINES) {
+          termLines = termLines.slice(termLines.length - MAX_TERM_LINES);
+        }
+
+        termRender();
+      }
+
+      function termClose() {
+        termElement.className = "term";
+      }
+
+      function termSend() {
+        var value = termInputElement.value;
+        termWrite("> " + value + "\n");
+        if (window.chrome && window.chrome.webview) {
+          window.chrome.webview.postMessage({ cmd: "termInput", text: value });
+        }
+        termInputElement.value = "";
+        termInputElement.focus();
+      }
+
+      function step(id, state, text) {
+        var item = document.querySelector('[data-step="' + id + '"]');
+        if (!item) {
+          return;
+        }
+        item.setAttribute("data-state", state);
+        if (text) {
+          var label = item.querySelector(".label");
+          if (label) {
+            label.textContent = text;
+          }
+        }
+      }
+
+      function reset() {
+        step("root", "pending");
+        step("backend", "pending");
+        step("frontend", "pending");
+        step("ready", "pending");
+        clearBanner();
+      }
+
+      function clearBanner() {
+        bannerElement.className = "banner";
+        bannerActions.innerHTML = "";
+      }
+
+      function banner(kind, title, text, actions) {
+        bannerElement.className = "banner visible" + (kind === "error" ? " error" : "");
+        bannerTitle.textContent = title;
+        bannerText.textContent = text;
+        bannerActions.innerHTML = "";
+        (actions || []).forEach(function (action) {
+          var button = document.createElement("button");
+          button.textContent = action.label;
+          if (action.primary) {
+            button.className = "primary";
+          }
+          button.addEventListener("click", function () {
+            send(action.id);
+          });
+          bannerActions.appendChild(button);
+        });
+      }
+
+      function log(line) {
+        if (!line) {
+          return;
+        }
+        logElement.textContent += line + "\n";
+        var lines = logElement.textContent.split("\n");
+        if (lines.length > MAX_LOG_LINES) {
+          logElement.textContent = lines.slice(lines.length - MAX_LOG_LINES).join("\n");
+        }
+        logElement.scrollTop = logElement.scrollHeight;
+      }
+
+      function setHeader(main, sub) {
+        if (main) {
+          titleElement.textContent = main;
+        }
+        if (sub) {
+          subtitleElement.textContent = sub;
+        }
+      }
+
+      window.sonetto = {
+        reset: reset,
+        step: step,
+        banner: banner,
+        clearBanner: clearBanner,
+        log: log,
+        setHeader: setHeader,
+        termOpen: termOpen,
+        termWrite: termWrite,
+        termClose: termClose
+      };
+
+      termSendButton.addEventListener("click", termSend);
+      termInputElement.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          termSend();
+        }
+      });
+      termStopButton.addEventListener("click", function () {
+        send("termStop");
+      });
+    })();
+  </script>
+</body>
+
+</html>

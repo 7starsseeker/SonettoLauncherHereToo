@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+
+    <AssemblyName>SonettoHereLauncher</AssemblyName>
+    <RootNamespace>SonettoHere.Launcher</RootNamespace>
+    <!-- 启动器自己的版本号，与上游本体的版本（version.py）相互独立 -->
+    <Version>1.0.0</Version>
+    <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <Product>SonettoHere 启动器</Product>
+    <Company>SonettoHere</Company>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <AllowedReferenceRelatedFileExtensions></AllowedReferenceRelatedFileExtensions>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <!-- WebView2 包会同时带入 WinForms 与 WPF 引用，WPF 侧引发 WindowsBase 版本冲突警告（本项目只用 WinForms） -->
+    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
+  </PropertyGroup>
+
+  <!-- 默认产物：自包含单文件（无需目标机器安装 .NET 运行时）。
+       框架依赖版由 build.ps1 用 -p:SelfContained=false 覆盖；
+       单文件压缩只在自包含时才允许（否则 NETSDK1176）。 -->
+  <PropertyGroup>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile Condition="'$(SelfContained)' == 'true'">true</EnableCompressionInSingleFile>
+    <PublishReadyToRun>false</PublishReadyToRun>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="assets\loading.html" LogicalName="loading.html" />
+    <EmbeddedResource Include="wrappers\backend_wrapper.py" LogicalName="backend_wrapper.py" />
+    <EmbeddedResource Include="wrappers\vite_run.mjs" LogicalName="vite_run.mjs" />
+  </ItemGroup>
+
+</Project>

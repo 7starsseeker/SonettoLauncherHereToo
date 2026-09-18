@@ -1,0 +1,6 @@
+# 构建中间产物与预编译产物（预编译 exe 走 Release 附件，不进仓库）
+build/
+bin/
+obj/
+dist/
+*.user
