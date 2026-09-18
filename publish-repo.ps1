@@ -23,7 +23,8 @@
 [CmdletBinding()]
 param(
     [string]$Repo = '7starsseeker/SonettoLauncherHereToo',
-    [string]$WorkDir = 'Q:\TEMP\SonettoLauncherHereToo',
+    # 默认落在系统临时目录；需要固定位置时用 -WorkDir 或环境变量 SONETTO_LAUNCHER_WORKDIR
+    [string]$WorkDir = $(if ($env:SONETTO_LAUNCHER_WORKDIR) { $env:SONETTO_LAUNCHER_WORKDIR } else { Join-Path ([IO.Path]::GetTempPath()) 'SonettoLauncherHereToo' }),
     [string]$Message = "chore: 更新启动器源码 $(Get-Date -Format 'yyyy-MM-dd HH:mm')",
     [switch]$SkipPush
 )
@@ -40,7 +41,32 @@ Write-Host "==> 临时仓库：$WorkDir" -ForegroundColor Cyan
 
 New-Item -ItemType Directory -Force -Path $WorkDir | Out-Null
 
-# ── 0. 先清空工作目录（保留 .git）────────────────────────────
+# ── 0a. 确保工作目录是个 git 仓库 ─────────────────────────────
+# 工作目录是全新的、而远端仓库已存在时，必须先 clone 继承既有历史：
+# 直接 git init 会得到一条与远端断链的单提交历史，push 会被拒（non-fast-forward）。
+if (-not (Test-Path (Join-Path $WorkDir '.git'))) {
+    Get-ChildItem -Path $WorkDir -Force |
+        Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+
+    $hasRemote = $false
+    if (Get-Command gh -ErrorAction SilentlyContinue) {
+        gh repo view $Repo --json name 2>$null | Out-Null
+        $hasRemote = ($LASTEXITCODE -eq 0)
+    }
+
+    if ($hasRemote) {
+        Write-Host "==> 从 $Repo 克隆既有历史到工作目录 ..." -ForegroundColor Cyan
+        git clone --quiet "https://github.com/$Repo.git" $WorkDir
+        if ($LASTEXITCODE -ne 0) {
+            throw "克隆 $Repo 失败（exit=$LASTEXITCODE）"
+        }
+    } else {
+        git init -b main $WorkDir | Out-Null
+        Write-Host "==> 远端仓库尚不存在，已初始化空仓库" -ForegroundColor Cyan
+    }
+}
+
+# ── 0b. 清空工作目录（保留 .git）─────────────────────────────
 # 这样源目录里被重命名/删除的文件，在仓库里也会同步删除（否则旧文件会永久残留）
 Get-ChildItem -Path $WorkDir -Force |
     Where-Object { $_.Name -ne '.git' } |
@@ -97,8 +123,7 @@ if (Test-Path $staleDist) {
 Push-Location $WorkDir
 try {
     if (-not (Test-Path (Join-Path $WorkDir '.git'))) {
-        git init -b main | Out-Null
-        Write-Host "==> 已初始化 git 仓库" -ForegroundColor Cyan
+        throw "工作目录不是 git 仓库：$WorkDir（步骤 0a 应已创建）"
     }
 
     git add -A

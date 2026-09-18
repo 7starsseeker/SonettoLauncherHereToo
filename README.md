@@ -242,7 +242,8 @@ pwsh build.ps1                                    # 重新打包两种产物
 pwsh publish-release.ps1 -Notes "本次更新说明"     # 用 csproj 版本号自动打 tag 并上传 exe
 ```
 
-`publish-repo.ps1` 使用临时 git 工作目录（默认 `Q:\TEMP\SonettoLauncherHereToo`），
+`publish-repo.ps1` 在**系统临时目录**下建一个工作副本（可用 `-WorkDir` 或环境变量
+`SONETTO_LAUNCHER_WORKDIR` 指定其它位置；该目录若不存在且远端仓库已存在，会先 clone 继承既有历史），
 只把源码拷过去提交推送，不会在上游项目里产生嵌套仓库；仓库里的 `.gitignore` 已排除 `dist/`，
 预编译产物不会误提交。`publish-release.ps1` 的 tag 取自 `SonettoLauncher.csproj` 的 `<Version>`，
 Release 已存在时会补传/覆盖附件，方便重打包后刷新。
