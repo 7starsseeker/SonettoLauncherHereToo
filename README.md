@@ -24,7 +24,7 @@
 | SonettoHere | 上游本体（被启动器管理的那个应用），版本号来自它的 `version.py` |
 
 启动器自身版本从 **1.0** 起（见 `SonettoLauncher.csproj` 的 `<Version>`），与本体版本相互独立：
-窗口标题形如 `SonettoLauncher v1.0.3 — SonettoHere v4.0.0`。
+窗口标题形如 `SonettoLauncher v1.0.4 — SonettoHere v4.0.0`。
 
 ## 与上游仓库的关系
 
@@ -174,6 +174,10 @@ pwsh build.ps1 -Only FrameworkDependent
 
 包含 `providers.yaml`、`auth_token.yaml`、`path_whitelist.yaml`、`mcp_servers.yaml`、`.env`
 以及 `config/personas/` 下的 USER.md / SOUL.md / MEMORY.md 等（只保留最近 10 份）。
+
+还会一并备份目录形式的本地资产 `local_tools/`（本地自用工具的 MCP server 代码）—— 它和
+`mcp_servers.yaml` 是一套，只恢复配置却没恢复脚本，本地工具会静默用不了。拷贝时跳过
+`__pycache__` 与 `.pyc`（可再生，不值得占备份体积）。
 点「初始化环境」时会先弹确认框说明这些影响；若只想装依赖、不想动个性文件，可以在脚本跑到 `[6/6]` 之前点「终止脚本」。
 
 ## 文件位置
@@ -245,6 +249,9 @@ Release 已存在时会补传/覆盖附件，方便重打包后刷新。
 
 ## 更新日志
 
+- **v1.0.4** — 执行初始化 / 更新前的自动备份现在也覆盖**目录形式的本地资产** `local_tools/`
+  （本地自用工具的 MCP server 代码）：它与已备份的 `config/mcp_servers.yaml` 是一套，只恢复配置却丢了脚本，
+  本地工具会静默用不了。拷贝时跳过 `__pycache__` 与 `.pyc`。
 - **v1.0.3** — 统一命名：工具（exe/程序集/产品名/窗口标题/`%LOCALAPPDATA%` 数据目录/Release 附件名）一律叫
   **SonettoLauncher**，仓库名保持 **SonettoLauncherHereToo**；首次启动会把旧目录 `%LOCALAPPDATA%\SonettoHereLauncher`
   的数据迁过来（整体改名失败时逐个复制配置与备份，并在日志里说明）。

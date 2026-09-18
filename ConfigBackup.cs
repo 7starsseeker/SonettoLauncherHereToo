@@ -29,6 +29,16 @@ internal static class ConfigBackup
         Path.Combine("config", "personas", "memory_operations.yaml"),
     };
 
+    /// <summary>
+    /// 目录形式的本地资产 —— 同样是 gitignore 里的东西、git 救不回来，必须一起备份。
+    /// <c>local_tools/</c> 是本地自用工具的 MCP server 代码，与已备份的
+    /// <c>config/mcp_servers.yaml</c> 配套：只恢复 yaml 而丢掉脚本，工具会静默用不了。
+    /// </summary>
+    private static readonly string[] BackupDirectories =
+    {
+        "local_tools",
+    };
+
     /// <summary>把关键配置拷到时间戳目录，返回备份目录（无文件可备份时返回 null）。</summary>
     public static string? Create(string projectRoot, string label, LogBus log)
     {
@@ -52,6 +62,17 @@ internal static class ConfigBackup
                 copied++;
             }
 
+            foreach (var relative in BackupDirectories)
+            {
+                var source = Path.Combine(projectRoot, relative);
+                if (!Directory.Exists(source))
+                {
+                    continue;
+                }
+
+                copied += CopyDirectory(source, Path.Combine(target, relative));
+            }
+
             if (copied == 0)
             {
                 return null;
@@ -66,7 +87,7 @@ internal static class ConfigBackup
             File.WriteAllText(Path.Combine(target, "backup-info.txt"), manifest.ToString(), new UTF8Encoding(false));
 
             PruneOldBackups();
-            log.Write($"[启动器] 已备份 {copied} 个配置文件 → {target}");
+            log.Write($"[启动器] 已备份 {copied} 个文件 → {target}");
             return target;
         }
         catch (Exception ex)
@@ -74,6 +95,36 @@ internal static class ConfigBackup
             log.Write($"[启动器] 配置备份失败（继续执行）：{ex.Message}");
             return null;
         }
+    }
+
+    /// <summary>递归复制目录，返回拷贝的文件数；跳过 __pycache__ 与 .pyc（可再生，不值得占备份）。</summary>
+    private static int CopyDirectory(string source, string destination)
+    {
+        Directory.CreateDirectory(destination);
+        var copied = 0;
+
+        foreach (var file in Directory.GetFiles(source))
+        {
+            if (file.EndsWith(".pyc", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), overwrite: true);
+            copied++;
+        }
+
+        foreach (var directory in Directory.GetDirectories(source))
+        {
+            if (string.Equals(Path.GetFileName(directory), "__pycache__", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            copied += CopyDirectory(directory, Path.Combine(destination, Path.GetFileName(directory)));
+        }
+
+        return copied;
     }
 
     /// <summary>只保留最近 10 份备份，避免无限堆积。</summary>
