@@ -11,8 +11,8 @@
     <AssemblyName>SonettoHereLauncher</AssemblyName>
     <RootNamespace>SonettoHere.Launcher</RootNamespace>
     <!-- 启动器自己的版本号，与上游本体的版本（version.py）相互独立 -->
-    <Version>1.0.0</Version>
-    <FileVersion>1.0.0.0</FileVersion>
+    <Version>1.0.1</Version>
+    <FileVersion>1.0.1.0</FileVersion>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <Product>SonettoHere 启动器</Product>
     <Company>SonettoHere</Company>

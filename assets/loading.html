@@ -13,6 +13,7 @@
       --muted: #8b93a7;
       --accent: #7c9cff;
       --ok: #4ade80;
+      --warn: #fbbf24;
       --err: #f87171;
     }
 
@@ -142,6 +143,14 @@
 
     .banner.error h2 {
       color: var(--err);
+    }
+
+    .banner.warn h2 {
+      color: var(--warn);
+    }
+
+    .banner.ok h2 {
+      color: var(--ok);
     }
 
     .actions {
@@ -455,7 +464,8 @@
       }
 
       function banner(kind, title, text, actions) {
-        bannerElement.className = "banner visible" + (kind === "error" ? " error" : "");
+        var kindClass = kind === "error" ? " error" : (kind === "warn" ? " warn" : (kind === "ok" ? " ok" : ""));
+        bannerElement.className = "banner visible" + kindClass;
         bannerTitle.textContent = title;
         bannerText.textContent = text;
         bannerActions.innerHTML = "";

@@ -181,6 +181,21 @@ internal sealed class ScriptRunner : IDisposable
         return text.Length <= maxChars ? text : text[^maxChars..];
     }
 
+    /// <summary>在完整输出里查找标记（用于判定脚本结局，避免只看退出码而误报）。</summary>
+    public bool OutputContains(params string[] markers)
+    {
+        var text = _rawOutput.ToString();
+        foreach (var marker in markers)
+        {
+            if (text.Contains(marker, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public void Dispose()
     {
         try

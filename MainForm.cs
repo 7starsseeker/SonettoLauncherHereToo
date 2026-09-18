@@ -522,23 +522,37 @@ internal sealed class MainForm : Form
         }
 
         var backup = ConfigBackup.Create(_root, "setup", _log);
+        var backupNote = backup is null ? string.Empty : Environment.NewLine + $"（执行前的配置备份：{backup}）";
 
-        var code = await RunScriptInWindowAsync(
+        var result = await RunScriptInWindowAsync(
             "环境初始化 — setup_guide.py",
             "初始化",
             python,
             new[] { "-u", "setup_guide.py" },
             _root);
 
-        if (code != 0)
+        // 结局分类：被终止 / 失败 / 完成（控制台在失败与终止时保留，方便回看输出）
+        if (result.WasTerminated)
         {
-            ReturnToStatusPage();
+            _log.Write("[启动器] 初始化被手动终止");
+            PageBanner(
+                "warn",
+                "初始化已终止",
+                "你在脚本执行过程中点了「终止脚本」。如果它当时正在安装依赖或写配置，环境可能处于中间状态。"
+                + Environment.NewLine + "建议点「重试初始化」重新跑一遍。"
+                + backupNote,
+                new[] { new PageAction("setup", "重试初始化", true), new PageAction("openLogs", "打开日志") });
+            return;
+        }
+
+        if (result.ExitCode != 0)
+        {
+            _log.Write($"[启动器] 初始化失败（exit={result.ExitCode}）");
             PageBanner(
                 "error",
-                "初始化未完成",
-                code == -2
-                    ? "脚本已被手动终止。服务当前处于停止状态。"
-                    : $"初始化脚本退出码为 {code}，上面的任务控制台里保留了完整输出。",
+                "初始化失败",
+                $"初始化脚本退出码为 {result.ExitCode}，上面的任务控制台里保留了完整输出。"
+                + backupNote,
                 new[] { new PageAction("setup", "重试初始化", true), new PageAction("openLogs", "打开日志") });
             return;
         }
@@ -546,21 +560,19 @@ internal sealed class MainForm : Form
         var missing = ProjectLocator.MissingPrerequisites(_root);
         if (missing.Count > 0)
         {
-            ReturnToStatusPage();
+            _log.Write($"[启动器] 初始化结束但环境仍不完整：{string.Join("、", missing)}");
             PageBanner(
-                "error",
+                "warn",
                 "环境仍不完整",
-                "仍缺少：" + Environment.NewLine + string.Join(Environment.NewLine, missing.Select(item => "· " + item)),
+                "初始化脚本正常结束，但仍缺少：" + Environment.NewLine
+                + string.Join(Environment.NewLine, missing.Select(item => "· " + item)),
                 new[] { new PageAction("setup", "重新初始化", true), new PageAction("openLogs", "打开日志") });
             return;
         }
 
-        _appVersion = ProjectLocator.ReadAppVersion(_root);
-        UpdateWindowTitle();
-
-        _services?.Dispose();
-        _services = CreateServiceManager();
-        await StartServicesAsync();
+        CloseTaskConsole();
+        await RestartServicesAfterScriptAsync();
+        SetHint("初始化完成，服务已启动");
 
         if (backup is not null)
         {
@@ -592,9 +604,10 @@ internal sealed class MainForm : Form
 
     /// <summary>
     /// 在窗口内的「任务控制台」里运行脚本：输出实时显示、输入行写回脚本 stdin、可随时终止。
-    /// 不开独立控制台窗口，脚本本身无需改动。
+    /// 不开独立控制台窗口，脚本本身无需改动。结束时**不**关闭控制台 ——
+    /// 由调用方按结局决定是否收起（失败/终止时保留，方便回看输出）。
     /// </summary>
-    private async Task<int> RunScriptInWindowAsync(
+    private async Task<ScriptRunResult> RunScriptInWindowAsync(
         string consoleTitle,
         string purpose,
         string fileName,
@@ -617,17 +630,38 @@ internal sealed class MainForm : Form
 
         var started = runner.Start(fileName, arguments, workingDirectory, _job);
         var code = started ? await runner.WaitAsync() : -1;
+        var result = new ScriptRunResult(code, runner.RecentOutput(60_000), code == -2);
 
-        _terminalOpen = false;
-        PageCall("window.sonetto && window.sonetto.termClose()");
         SetBusy(false, string.Empty);
-
-        runner.Dispose();
         _scriptRunner = null;
+        runner.Dispose();
 
         _log.Write($"[启动器] {purpose}脚本结束（exit={code}）");
-        return code;
+        return result;
     }
+
+    /// <summary>收起任务控制台（结局一目了然时用，例如成功）。</summary>
+    private void CloseTaskConsole()
+    {
+        _terminalOpen = false;
+        PageCall("window.sonetto && window.sonetto.termClose()");
+    }
+
+    /// <summary>脚本结束后恢复服务（只用于「没有改动任何文件」的结局）。</summary>
+    private async Task RestartServicesAfterScriptAsync()
+    {
+        _appVersion = ProjectLocator.ReadAppVersion(_root!);
+        UpdateWindowTitle();
+
+        _services?.Dispose();
+        _services = CreateServiceManager();
+        await StartServicesAsync();
+    }
+
+    private void SetHint(string text) => _hintLabel.Text = text;
+
+    /// <summary>脚本运行结果：退出码、输出尾部、是否被手动终止。</summary>
+    private sealed record ScriptRunResult(int ExitCode, string Output, bool WasTerminated);
 
     private void UpdateWindowTitle()
     {
@@ -660,40 +694,98 @@ internal sealed class MainForm : Form
 
         // 迁移脚本可能改写配置，更新前先备份一份
         var upgradeBackup = ConfigBackup.Create(_root, "upgrade", _log);
+        var backupNote = upgradeBackup is null ? string.Empty : Environment.NewLine + $"（执行前的配置备份：{upgradeBackup}）";
 
-        var code = await RunScriptInWindowAsync(
+        var result = await RunScriptInWindowAsync(
             "检查更新 — upgrade.py",
             "更新",
             ProjectLocator.VenvPython(_root),
             new[] { "-u", "upgrade.py" },
             _root);
 
-        if (code != 0)
+        // ── 结局分类：已终止 / 已是最新 / 未发现上游 / 更新失败 / 更新完成 ──
+        if (result.WasTerminated)
         {
-            ReturnToStatusPage();
+            _log.Write("[启动器] 更新检查被手动终止");
             PageBanner(
-                "error",
-                "更新未成功",
-                (code == -2
-                    ? "脚本已被手动终止。服务当前处于停止状态。"
-                    : $"升级脚本退出码为 {code}，上面的任务控制台里保留了完整输出。服务当前处于停止状态。")
-                + (upgradeBackup is null ? string.Empty : Environment.NewLine + $"（执行前的配置备份：{upgradeBackup}）"),
+                "warn",
+                "更新已终止",
+                "你在脚本执行过程中点了「终止脚本」，更新没有跑完，文件可能处于中间状态。"
+                + Environment.NewLine + "建议点「重试更新」重新执行，或直接启动服务。"
+                + backupNote,
+                new[] { new PageAction("upgrade", "重试更新", true), new PageAction("start", "启动服务") });
+            return;
+        }
+
+        if (result.ExitCode == 0 && IndicatesUpToDate(result.Output))
+        {
+            _log.Write("[启动器] 检查更新：上游没有新提交（已是最新，未做任何改动）");
+            PageBanner(
+                "info",
+                "已是最新版本，无需更新",
+                "上游没有新的提交，依赖与配置迁移也都已就绪 —— 本次检查没有改动任何文件。"
+                + Environment.NewLine + "服务当前处于停止状态，点下面的按钮即可启动。",
+                new[] { new PageAction("start", "启动服务", true) });
+            return;
+        }
+
+        if (result.ExitCode == 0)
+        {
+            CloseTaskConsole();
+            _log.Write("[启动器] 更新完成，正在重启服务");
+            await RestartServicesAfterScriptAsync();
+            SetHint("检查更新：已拉取更新并完成配置迁移，服务已重启");
+
+            if (upgradeBackup is not null)
+            {
+                _log.Write($"[启动器] 配置备份位于 {upgradeBackup}");
+            }
+
+            return;
+        }
+
+        if (IndicatesNoUpstream(result.Output))
+        {
+            _log.Write("[启动器] 检查更新：当前分支没有配置上游，git pull 无法执行（未做任何改动）");
+            PageBanner(
+                "warn",
+                "未发现上游更新",
+                "当前分支没有配置上游仓库，`git pull` 无法执行 —— 所以既没有拉取到更新，也没有改动任何文件。"
+                + Environment.NewLine + "这通常出现在本地功能分支上（没有对应的远程分支）。"
+                + Environment.NewLine + "服务当前处于停止状态，点下面的按钮即可启动。"
+                + backupNote,
                 new[] { new PageAction("start", "启动服务", true), new PageAction("upgrade", "重试更新") });
             return;
         }
 
-        _appVersion = ProjectLocator.ReadAppVersion(_root);
-        UpdateWindowTitle();
-
-        _services?.Dispose();
-        _services = CreateServiceManager();
-        await StartServicesAsync();
-
-        if (upgradeBackup is not null)
-        {
-            _log.Write($"[启动器] 更新完成；配置备份位于 {upgradeBackup}");
-        }
+        _log.Write($"[启动器] 更新失败（exit={result.ExitCode}）");
+        PageBanner(
+            "error",
+            "更新失败",
+            $"升级脚本退出码为 {result.ExitCode}，上面的任务控制台里保留了完整输出。服务当前处于停止状态。"
+            + backupNote,
+            new[] { new PageAction("start", "启动服务", true), new PageAction("upgrade", "重试更新") });
     }
+
+    /// <summary>upgrade.py 的「确实拉到了新代码」标记。</summary>
+    private static bool IndicatesPulledNewCode(string output) => output.Contains("已拉取更新");
+
+    /// <summary>upgrade.py 的「上游无新提交」标记（排除掉确实拉到了新代码的情况）。</summary>
+    private static bool IndicatesUpToDate(string output)
+    {
+        if (IndicatesPulledNewCode(output))
+        {
+            return false;
+        }
+
+        return output.Contains("已是最新") || output.Contains("Already up to date");
+    }
+
+    /// <summary>git pull 因分支没有上游而失败 —— 未做任何改动，不算真正的失败。</summary>
+    private static bool IndicatesNoUpstream(string output) =>
+        output.Contains("no upstream configured")
+        || output.Contains("no tracking information")
+        || output.Contains("没有跟踪信息");
 
     /// <summary>
     /// 为 setup/upgrade 准备干净环境：这两个脚本只有在「程序没在跑」时才该执行
@@ -987,6 +1079,7 @@ internal sealed class MainForm : Form
 
         _showingApp = false;
         _pageLoaded = false;
+        _terminalOpen = false;   // 全新页面里没有任务控制台
         _webView.CoreWebView2.NavigateToString(WrapperResources.ReadLoadingPage());
 
         // 重新导航后页面是全新的，表头与项目目录这一步要补回来（会排队到页面加载完再执行）
