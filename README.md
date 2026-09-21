@@ -11,7 +11,28 @@
   <img alt=".NET" src="https://img.shields.io/badge/.NET-8.0-512BD4">
   <img alt="license" src="https://img.shields.io/badge/license-MIT-green">
   <a href="https://github.com/7starsseeker/SonettoLauncherHereToo/releases/latest"><img alt="release" src="https://img.shields.io/github/v/release/7starsseeker/SonettoLauncherHereToo?label=release&color=blue"></a>
+  <a href="https://github.com/7starsseeker/SonettoLauncherHereToo/releases"><img alt="downloads" src="https://img.shields.io/github/downloads/7starsseeker/SonettoLauncherHereToo/total"></a>
+  <a href="https://github.com/7starsseeker/SonettoLauncherHereToo/releases"><img alt="release date" src="https://img.shields.io/github/release-date/7starsseeker/SonettoLauncherHereToo"></a>
+  <a href="https://github.com/7starsseeker/SonettoLauncherHereToo/commits/main"><img alt="last commit" src="https://img.shields.io/github/last-commit/7starsseeker/SonettoLauncherHereToo"></a>
 </p>
+
+---
+
+## 目录
+
+- [命名](#命名)
+- [与上游仓库的关系](#与上游仓库的关系)
+- [为什么做这个](#为什么做这个)
+- [功能](#功能)
+- [快速开始](#快速开始)
+- [界面与操作](#界面与操作)
+- [工作原理](#工作原理)
+- [文件位置](#文件位置)
+- [故障排查](#故障排查)
+- [已知限制](#已知限制)
+- [开发说明](#开发说明)
+- [更新日志](#更新日志)
+- [版权与许可](#版权与许可)
 
 ---
 
