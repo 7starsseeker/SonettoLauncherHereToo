@@ -14,6 +14,7 @@
   <a href="https://github.com/7starsseeker/SonettoLauncherHereToo/releases"><img alt="downloads" src="https://img.shields.io/github/downloads/7starsseeker/SonettoLauncherHereToo/total"></a>
   <a href="https://github.com/7starsseeker/SonettoLauncherHereToo/releases"><img alt="release date" src="https://img.shields.io/github/release-date/7starsseeker/SonettoLauncherHereToo"></a>
   <a href="https://github.com/7starsseeker/SonettoLauncherHereToo/commits/main"><img alt="last commit" src="https://img.shields.io/github/last-commit/7starsseeker/SonettoLauncherHereToo"></a>
+  <a href="https://github.com/deepseek-ai/deepseek-harness"><img alt="powered by dsh" src="https://img.shields.io/badge/powered_by-dsh-4D6BFE?style=flat-square&logo=deepseek&logoColor=white"></a>
 </p>
 
 ---
